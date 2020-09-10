@@ -5,6 +5,9 @@ import ballerina/log;
 
 public function main() {
     http:Client httpClient = new(API_PATH);
+    string accessToken = config:getAsString(ACCESS_TOKEN_ENV);
+    string accessTokenHeaderValue = "Bearer " + accessToken;
+    http:Request request = createRequest(accessTokenHeaderValue);
 
     var result = readFileAndGetJson(CONFIG_FILE_PATH);
     if (result is error) {
@@ -13,40 +16,45 @@ public function main() {
     json jsonFile = <json>result;
     json[] modules = <json[]>jsonFile.modules;
     foreach json module in modules {
-        releaseModule(module, httpClient);
+        releaseModule(module, httpClient, request);
     }
 }
 
-function releaseModule(json module, http:Client httpClient) {
+function releaseModule(json module, http:Client httpClient, http:Request request) {
     string moduleName = module.name.toString();
-
-    string accessToken = config:getAsString(ACCESS_TOKEN_ENV);
-    string accessTokenHeaderValue = "Bearer " + accessToken;
-
-    http:Request request = new;
-    request.addHeader(ACCEPT_HEADER_KEY, ACCEPT_HEADER_VALUE);
-    request.addHeader(AUTH_HEADER_KEY, accessTokenHeaderValue);
-
+    boolean release = <boolean>module.release;
+    if (!release) {
+        return;
+    }
     json payload = {
-        event_type: "Ballerina Release Pipeline",
-        client_payload: {
-            sample: "example-value"
-        }
+        event_type: "Ballerina Release Pipeline"
     };
-
     request.setJsonPayload(payload);
+
     string modulePath = "/" + ORG_NAME + "/" + moduleName + "/dispatches";
     var result = httpClient->post(modulePath, request);
+
     if (result is error) {
         log:printError("Error occurred while retrieving the reponse for module: " + moduleName, result);
         panic result;
     }
     http:Response response = <http:Response>result;
+    validateResponse(response, moduleName);
+}
+
+function validateResponse(http:Response response, string moduleName) {
     int statusCode = response.statusCode;
-    if (statusCode != 200) {
+    if (statusCode != 204) {
         string errMessage = "Error response received from the module: ";
         panic error(errMessage + moduleName + " workflow. Code: " + statusCode.toString());
     }
+}
+
+function createRequest(string accessTokenHeaderValue) returns http:Request {
+    http:Request request = new;
+    request.addHeader(ACCEPT_HEADER_KEY, ACCEPT_HEADER_VALUE);
+    request.addHeader(AUTH_HEADER_KEY, accessTokenHeaderValue);
+    return request;
 }
 
 function readFileAndGetJson(string path) returns json|error {

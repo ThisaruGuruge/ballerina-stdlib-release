@@ -2,152 +2,222 @@
     "modules": [
         {
             "name": "module-ballerina-java.arrays",
-            "version": "0.9.0"
+            "version": "0.9.0",
+            "level": 0,
+            "release": false
         },
         {
             "name": "module-ballerina-jsonutils",
-            "version": "1.0.0"
+            "version": "1.0.0",
+            "level": 0,
+            "release": false
         },
         {
             "name": "module-ballerina-xmlutils",
             "branch": "release-stage",
-            "version": "1.0.0"
+            "version": "1.0.0",
+            "level": 0,
+            "release": false
         },
 
         {
             "name": "module-ballerina-math",
-            "version": "1.0.0"
+            "version": "1.0.0",
+            "level": 1,
+            "release": false
         },
         {
             "name": "module-ballerina-io",
-            "version": "1.0.0"
+            "version": "1.0.0",
+            "level": 1,
+            "release": false
         },
         {
             "name": "module-ballerina-stringutils",
-            "version": "1.0.0"
+            "version": "1.0.0",
+            "level": 1,
+            "release": false
         },
         {
             "name": "module-ballerina-runtime",
-            "version": "1.0.0"
+            "version": "1.0.0",
+            "level": 1,
+            "release": false
         },
 
         {
             "name": "module-ballerina-system",
-            "version": "1.0.0"
+            "version": "1.0.0",
+            "level": 2,
+            "release": false
         },
         {
             "name": "module-ballerina-time",
-            "version": "1.0.0"
+            "version": "1.0.0",
+            "level": 2,
+            "release": false
         },
         {
             "name": "module-ballerina-xslt",
-            "version": "1.0.0"
+            "version": "1.0.0",
+            "level": 2,
+            "release": false
         },
         {
             "name": "module-ballerina-task",
-            "version": "1.0.0"
+            "version": "1.0.0",
+            "level": 2,
+            "release": false
         },
 
         {
             "name": "module-ballerina-encoding",
-            "version": "1.0.2"
+            "version": "1.0.2",
+            "level": 3,
+            "release": false
         },
         {
             "name": "module-ballerina-config",
-            "version": "1.0.0"
+            "version": "1.0.0",
+            "level": 3,
+            "release": false
         },
         {
             "name": "module-ballerina-file",
-            "version": "1.0.0"
+            "version": "1.0.0",
+            "level": 3,
+            "release": false
         },
         {
             "name": "module-ballerina-crypto",
-            "version": "1.0.0"
+            "version": "1.0.0",
+            "level": 3,
+            "release": false
         },
 
         {
             "name": "module-ballerina-log",
-            "version": "1.0.0"
+            "version": "1.0.0",
+            "level": 4,
+            "release": false
         },
         {
             "name": "module-ballerina-reflect",
-            "version": "0.5.0"
+            "version": "0.5.0",
+            "level": 4,
+            "release": false
         },
 
         {
             "name": "module-ballerina-mime",
-            "version": "1.0.0"
+            "version": "1.0.0",
+            "level": 5,
+            "release": false
         },
         {
             "name": "module-ballerina-filepath",
-            "version": "1.0.0"
+            "version": "1.0.0",
+            "level": 5,
+            "release": false
         },
         {
             "name": "module-ballerina-cache",
-            "version": "1.0.0"
+            "version": "1.0.0",
+            "level": 5,
+            "release": false
         },
         {
             "name": "module-ballerina-socket",
-            "version": "0.6.8"
+            "version": "0.6.8",
+            "level": 5,
+            "release": false
         },
         {
             "name": "module-ballerinax-nats",
-            "version": "1.0.0"
+            "version": "1.0.0",
+            "level": 5,
+            "release": false
         },
         {
             "name": "module-ballerinax-rabbitmq",
-            "version": "1.0.0"
+            "version": "1.0.0",
+            "level": 5,
+            "release": false
         },
 
         {
             "name": "module-ballerina-email",
-            "version": "1.0.0"
+            "version": "1.0.0",
+            "level": 6,
+            "release": false
         },
         {
             "name": "module-ballerinax-kafka",
-            "version": "2.0.0"
+            "version": "2.0.0",
+            "level": 6,
+            "release": true
         },
         {
             "name": "module-ballerina-auth",
-            "version": "1.0.0"
+            "version": "1.0.0",
+            "level": 6,
+            "release": false
         },
         {
             "name": "module-ballerina-sql",
-            "version": "0.5.0"
+            "version": "0.5.0",
+            "level": 6,
+            "release": false
         },
 
         {
             "name": "module-ballerina-java.jdbc",
-            "version": "0.5.0"
+            "version": "0.5.0",
+            "level": 6,
+            "release": false
         },
         {
             "name": "module-ballerinax-mysql",
-            "version": "0.6.0"
+            "version": "0.6.0",
+            "level": 6,
+            "release": false
         },
         {
             "name": "module-ballerina-ldap",
-            "version": "1.0.0"
+            "version": "1.0.0",
+            "level": 6,
+            "release": false
         },
         {
             "name": "module-ballerina-http",
-            "version": "1.0.0"
+            "version": "1.0.0",
+            "level": 6,
+            "release": false
         },
 
         {
             "name": "module-ballerina-websub",
-            "version": "2.0.0"
+            "version": "2.0.0",
+            "level": 7,
+            "release": false
         },
         {
             "name": "module-ballerina-jwt",
-            "version": "1.0.2"
+            "version": "1.0.2",
+            "level": 7,
+            "release": false
         },
         {
             "name": "module-ballerina-oauth2",
-            "version": "1.0.0"
+            "version": "1.0.0",
+            "level": 7,
+            "release": false
         },
         {
             "name": "module-ballerina-grpc",
-            "version": "0.7.0"
+            "version": "0.7.0",
+            "level": 7,
+            "release": false
         }
     ]
 }

@@ -22,7 +22,7 @@ function releaseModule(json module, http:Client httpClient) {
     string orgName = module.org.toString();
 
     string accessToken = config:getAsString(ACCESS_TOKEN_ENV);
-    string accessTokenHeaderValue = "Bearer " + accessToken;
+    string accessTokenHeaderValue = "Bearer " + ACCESS_TOKEN_ENV;
 
     http:Request request = new;
     request.addHeader(ACCEPT_HEADER_KEY, ACCEPT_HEADER_VALUE);
@@ -36,7 +36,7 @@ function releaseModule(json module, http:Client httpClient) {
     };
 
     request.setPayload(payload);
-    string modulePath =  ":" + orgName + "/:" + moduleName + "/dispatches";
+    string modulePath =  orgName + "/" + moduleName + "/dispatches";
     log:printInfo(modulePath);
     log:printInfo(accessTokenHeaderValue);
     var result = httpClient->post(modulePath, request);

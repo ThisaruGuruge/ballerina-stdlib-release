@@ -63,7 +63,10 @@ function releaseToBallerina(map<json> module, http:Client httpClient, http:Reque
     string 'version = module.'version.toString();
     log:printInfo("Releasing " + moduleName + " to the Ballerina Central Version: " + 'version);
     json payload = {
-        event_type: "Ballerina Release Pipeline"
+        event_type: EVENT_TYPE,
+        client_payload: {
+            'version: 'version
+        }
     };
     request.setJsonPayload(payload);
 

@@ -10,4 +10,5 @@ const AUTH_HEADER_KEY = "Authorization";
 
 const BALLERINA_RELEASE = "ballerina_release";
 const GITHUB_RELEASE = "github_release";
+const EVENT_TYPE = "stdlib-release-pipeline";
 

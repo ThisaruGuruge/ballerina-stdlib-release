@@ -1,7 +1,7 @@
+import ballerina/config;
 import ballerina/io;
 import ballerina/http;
 import ballerina/log;
-import ballerina/config;
 
 public function main() {
     http:Client httpClient = new(API_PATH);
@@ -29,21 +29,35 @@ function releaseModule(json module, http:Client httpClient) {
     request.addHeader(AUTH_HEADER_KEY, accessTokenHeaderValue);
 
     json payload = {
-        event_type: "stdlib-release-pipeline",
+        event_type: "Ballerina Release Pipeline",
         client_payload: {
             sample: "example-value"
         }
     };
 
-    request.setPayload(payload);
-    string modulePath =  orgName + "/" + moduleName;
+    request.setJsonPayload(payload);
+    string modulePath = "/" + orgName + "/" + moduleName + "/dispatches";
     log:printInfo(API_PATH + modulePath);
+    printRequestHeaders(request);
     var result = httpClient->post(modulePath, request);
     if (result is error) {
         log:printError("Error occurred while retrieving the reponse", result);
     }
     http:Response response = <http:Response>result;
     log:printInfo(response.getJsonPayload().toString());
+}
+
+function printRequestHeaders(http:Request request) {
+    string[] headers = request.getHeaderNames();
+    foreach string header in headers {
+        log:printInfo(header + ": " + request.getHeader(<@untainted>header));
+    }
+    var payload = request.getJsonPayload();
+    if (payload is error) {
+        log:printError("Payload Error", payload);
+    } else {
+        log:printInfo(payload.toJsonString());
+    }
 }
 
 function readFileAndGetJson(string path) returns json|error {

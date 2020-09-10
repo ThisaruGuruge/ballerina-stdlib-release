@@ -8,10 +8,10 @@ jobs:
         steps:
             - uses: actions/checkout@v2
 
-            - name: Ballerina Build
+            - name: Release Pipeline
               uses: ballerina-platform/ballerina-action@swan-lake-release
-
-            - name: Trigger Release
-              working-directory: ./stdlib-release
-              run: |
-                  ballerina run release
+              with:
+                args:
+                  run release
+              env:
+                WORKING_DIR: ./stdlib-release

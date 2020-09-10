@@ -2,6 +2,7 @@ import ballerina/config;
 import ballerina/http;
 import ballerina/io;
 import ballerina/log;
+import ballerina/runtime;
 
 public function main() {
     http:Client httpClient = new (API_PATH);
@@ -15,7 +16,14 @@ public function main() {
     }
     json jsonFile = <json>result;
     json[] modules = <json[]>jsonFile.modules;
+    int level = -1;
     foreach json module in modules {
+        int nextLevel = <int>module.level;
+        log:printInfo(module.name.toString());
+        if (nextLevel > level && nextLevel != 0) {
+            runtime:sleep(WAIT_TIME_TO_BUILD);
+            level = nextLevel;
+        }
         processModule(<map<json>>module, httpClient, request);
     }
 }
@@ -62,6 +70,8 @@ function releaseToBallerina(map<json> module, http:Client httpClient, http:Reque
     string moduleName = module.name.toString();
     string 'version = module.'version.toString();
     log:printInfo("Releasing " + moduleName + " to the Ballerina Central Version: " + 'version);
+
+    // TODO: Add branch as a payload parameter, then checkout the needed branch at the destination.
     json payload = {
         event_type: EVENT_TYPE,
         client_payload: {
@@ -84,8 +94,10 @@ function releaseToBallerina(map<json> module, http:Client httpClient, http:Reque
 function validateResponse(http:Response response, string moduleName) {
     int statusCode = response.statusCode;
     if (statusCode != 200 || statusCode != 201 || statusCode != 202 || statusCode != 204) {
-        string errMessage = "Error response received from the module: ";
-        panic error(errMessage + moduleName + " workflow. Code: " + statusCode.toString());
+        string errMessage = "Error response received from the module workflow.";
+        string errInfo = "Modlue: " + moduleName + " Status Code: " + statusCode.toString();
+        log:printInfo(errInfo);
+        log:printInfo(response.getJsonPayload().toString());
     }
 }
 

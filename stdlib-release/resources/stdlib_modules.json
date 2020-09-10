@@ -228,7 +228,7 @@
             "branch": "master",
             "level": 6,
             "ballerina_release": false,
-            "github_release": false,
+            "github_release": true,
             "notes": ""
         },
         {

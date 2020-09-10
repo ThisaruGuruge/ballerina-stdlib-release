@@ -12,3 +12,4 @@ const BALLERINA_RELEASE = "ballerina_release";
 const GITHUB_RELEASE = "github_release";
 const EVENT_TYPE = "stdlib-release-pipeline";
 
+const WAIT_TIME_TO_BUILD = 100;

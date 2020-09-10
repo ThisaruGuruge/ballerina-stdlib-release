@@ -3,6 +3,6 @@ const ACCESS_TOKEN_ENV = "GITHUB_TOKEN";
 const API_PATH = "https://api.github.com/repos/";
 
 const ACCEPT_HEADER_KEY = "ACCEPT";
-const ACCEPT_HEADER_VALUE = "application/vnd.github.everest-preview+json";
+const ACCEPT_HEADER_VALUE = "application/vnd.github.v3+json";
 const AUTH_HEADER_KEY = "Authorization";
 

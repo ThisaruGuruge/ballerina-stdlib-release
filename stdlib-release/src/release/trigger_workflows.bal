@@ -29,14 +29,14 @@ function releaseModule(json module, http:Client httpClient) {
     request.addHeader(AUTH_HEADER_KEY, accessTokenHeaderValue);
 
     json payload = {
-        event_type: "my_event_type",
+        event_type: "stdlib-release-pipeline",
         client_payload: {
             sample: "example-value"
         }
     };
 
     request.setPayload(payload);
-    string modulePath =  orgName + "/" + moduleName + "/dispatches";
+    string modulePath =  orgName + "/" + moduleName;
     log:printInfo(API_PATH + modulePath);
     var result = httpClient->post(modulePath, request);
     if (result is error) {

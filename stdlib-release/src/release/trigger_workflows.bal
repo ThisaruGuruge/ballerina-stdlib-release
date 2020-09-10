@@ -19,7 +19,6 @@ public function main() {
 
 function releaseModule(json module, http:Client httpClient) {
     string moduleName = module.name.toString();
-    string orgName = module.org.toString();
 
     string accessToken = config:getAsString(ACCESS_TOKEN_ENV);
     string accessTokenHeaderValue = "Bearer " + accessToken;
@@ -37,26 +36,16 @@ function releaseModule(json module, http:Client httpClient) {
 
     request.setJsonPayload(payload);
     string modulePath = "/" + ORG_NAME + "/" + moduleName + "/dispatches";
-    log:printInfo(API_PATH + modulePath);
-    printRequestHeaders(request);
     var result = httpClient->post(modulePath, request);
     if (result is error) {
-        log:printError("Error occurred while retrieving the reponse", result);
+        log:printError("Error occurred while retrieving the reponse for module: " + moduleName, result);
+        panic result;
     }
     http:Response response = <http:Response>result;
-    log:printInfo(response.getJsonPayload().toString());
-}
-
-function printRequestHeaders(http:Request request) {
-    string[] headers = request.getHeaderNames();
-    foreach string header in headers {
-        log:printInfo(header + ": " + request.getHeader(<@untainted>header));
-    }
-    var payload = request.getJsonPayload();
-    if (payload is error) {
-        log:printError("Payload Error", payload);
-    } else {
-        log:printInfo(payload.toJsonString());
+    int statusCode = response.statusCode;
+    if (statusCode != 200) {
+        string errMessage = "Error response received from the module: ";
+        panic error(errMessage + moduleName + " workflow. Code: " + statusCode.toString());
     }
 }
 

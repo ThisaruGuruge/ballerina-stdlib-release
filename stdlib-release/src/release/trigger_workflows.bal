@@ -1,10 +1,10 @@
 import ballerina/config;
-import ballerina/io;
 import ballerina/http;
+import ballerina/io;
 import ballerina/log;
 
 public function main() {
-    http:Client httpClient = new(API_PATH);
+    http:Client httpClient = new (API_PATH);
     string accessToken = config:getAsString(ACCESS_TOKEN_ENV);
     string accessTokenHeaderValue = "Bearer " + accessToken;
     http:Request request = createRequest(accessTokenHeaderValue);
@@ -16,16 +16,22 @@ public function main() {
     json jsonFile = <json>result;
     json[] modules = <json[]>jsonFile.modules;
     foreach json module in modules {
-        releaseModule(module, httpClient, request);
+        processModule(<map<json>>module, httpClient, request);
     }
 }
 
-function releaseModule(json module, http:Client httpClient, http:Request request) {
-    string moduleName = module.name.toString();
-    boolean release = <boolean>module.release;
-    if (!release) {
-        return;
+function processModule(map<json> module, http:Client httpClient, http:Request request) {
+    boolean ballerinaRelease = <boolean>module[BALLERINA_RELEASE];
+    boolean githubRelease = <boolean>module[GITHUB_RELEASE];
+    if (githubRelease) {
+        releaseToGithub(module, httpClient, request);
+    } else if (ballerinaRelease) {
+        releaseToBallerina(module, httpClient, request);
     }
+}
+
+function releaseToBallerina(map<json> module, http:Client httpClient, http:Request request) {
+    string moduleName = module.name.toString();
     json payload = {
         event_type: "Ballerina Release Pipeline"
     };
@@ -40,6 +46,22 @@ function releaseModule(json module, http:Client httpClient, http:Request request
     }
     http:Response response = <http:Response>result;
     validateResponse(response, moduleName);
+}
+function releaseToGithub(map<json> module, http:Client httpClient, http:Request request) {
+    string moduleName = module.name.toString();
+    string moduleVersion = module.'version.toString();
+    string branch = module.branch.toString();
+    string notes = module.notes.toString();
+
+    json payload = {
+        tag_name: "v" + moduleVersion,
+        target_commitish: branch,
+        name: moduleVersion,
+        notes: notes
+    };
+    request.setJsonPayload(payload);
+
+    string modulePath = "/" + ORG_NAME + "/" + moduleName + "/releases";
 }
 
 function validateResponse(http:Response response, string moduleName) {

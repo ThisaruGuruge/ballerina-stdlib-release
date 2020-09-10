@@ -1,0 +1,16 @@
+{
+    "modules": [
+        {
+            "name": "module-ballerinax-kafka",
+            "org": "ThisaruGuruge",
+            "branch": "release-stage",
+            "version": "2.0.0"
+        },
+        {
+            "name": "module-ballerina-task",
+            "org": "ThisaruGuruge",
+            "branch": "release-stage",
+            "version": "2.0.0"
+        }
+    ]
+}

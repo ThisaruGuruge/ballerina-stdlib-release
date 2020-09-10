@@ -22,7 +22,7 @@ function releaseModule(json module, http:Client httpClient) {
     string orgName = module.org.toString();
 
     string accessToken = config:getAsString(ACCESS_TOKEN_ENV);
-    string accessTokenHeaderValue = "Bearer " + ACCESS_TOKEN_ENV;
+    string accessTokenHeaderValue = "Bearer " + accessToken;
 
     http:Request request = new;
     request.addHeader(ACCEPT_HEADER_KEY, ACCEPT_HEADER_VALUE);
@@ -37,8 +37,7 @@ function releaseModule(json module, http:Client httpClient) {
 
     request.setPayload(payload);
     string modulePath =  orgName + "/" + moduleName + "/dispatches";
-    log:printInfo(modulePath);
-    log:printInfo(accessTokenHeaderValue);
+    log:printInfo(API_PATH + modulePath);
     var result = httpClient->post(modulePath, request);
     if (result is error) {
         log:printError("Error occurred while retrieving the reponse", result);

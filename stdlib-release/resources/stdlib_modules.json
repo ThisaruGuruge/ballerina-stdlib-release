@@ -227,8 +227,8 @@
             "version": "2.0.0",
             "branch": "master",
             "level": 6,
-            "ballerina_release": true,
-            "github_release": true,
+            "ballerina_release": false,
+            "github_release": false,
             "notes": ""
         },
         {

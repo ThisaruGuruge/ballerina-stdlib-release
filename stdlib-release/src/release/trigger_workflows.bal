@@ -36,7 +36,7 @@ function releaseModule(json module, http:Client httpClient) {
     };
 
     request.setJsonPayload(payload);
-    string modulePath = "/" + orgName + "/" + moduleName + "/dispatches";
+    string modulePath = "/" + ORG_NAME + "/" + moduleName + "/dispatches";
     log:printInfo(API_PATH + modulePath);
     printRequestHeaders(request);
     var result = httpClient->post(modulePath, request);

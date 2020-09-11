@@ -4,74 +4,70 @@ import ballerina/io;
 import ballerina/log;
 import ballerina/runtime;
 
-public function main() {
-    http:Client httpClient = new (API_PATH);
-    string accessToken = config:getAsString(ACCESS_TOKEN_ENV);
-    string accessTokenHeaderValue = "Bearer " + accessToken;
-    http:Request request = createRequest(accessTokenHeaderValue);
+http:Client httpClient = new (API_PATH);
+string accessToken = config:getAsString(ACCESS_TOKEN_ENV);
+string accessTokenHeaderValue = "Bearer " + accessToken;
 
+public function main() {
+    json[] modulesJson = getModuleJsonArray();
+    Module[] modules = getModuleArray(modulesJson);
+    handleRelease(modules);
+}
+
+function getModuleJsonArray() returns json[] {
     var result = readFileAndGetJson(CONFIG_FILE_PATH);
     if (result is error) {
-        log:printError("Error occurred whie reading the file", result);
+        logAndPanicError("Error occurred whie reading the file", result);
     }
     json jsonFile = <json>result;
-    json[] modules = <json[]>jsonFile.modules;
-    int level = -1;
-    foreach json module in modules {
-        int nextLevel = <int>module.level;
-        log:printInfo(module.name.toString());
-        if (nextLevel > level && nextLevel != 0) {
-            runtime:sleep(WAIT_TIME_TO_BUILD);
-            level = nextLevel;
+    return <json[]>jsonFile.modules;
+}
+
+function getModuleArray(json[] modulesJson) returns Module[] {
+    Module[] modules = [];
+    foreach json moduleJson in modulesJson {
+        Module|error result = Module.constructFrom(moduleJson);
+        if (result is error) {
+            logAndPanicError("Error building the module record", result);
         }
-        processModule(<map<json>>module, httpClient, request);
+        Module module = <Module>result;
+        modules.push(module);
     }
+    return modules;
 }
 
-function processModule(map<json> module, http:Client httpClient, http:Request request) {
-    boolean ballerinaRelease = <boolean>module[BALLERINA_RELEASE];
-    boolean githubRelease = <boolean>module[GITHUB_RELEASE];
-    if (githubRelease) {
-        releaseToGithub(module, httpClient, request);
-    } else if (ballerinaRelease) {
-        releaseToBallerina(module, httpClient, request);
+function handleRelease(Module[] modules) {
+    int currentLevel = -1;
+    Module[] currentModules = [];
+    foreach Module module in modules {
+        int nextLevel = module.level;
+        if (nextLevel > currentLevel && currentModules.length() > 0) {
+            waitForCurrentModuleReleases(currentModules);
+            currentModules.removeAll();
+            currentLevel = nextLevel;
+        }
+        if (module.release) {
+            boolean releaseStarted = releaseModule(module);
+            if (releaseStarted) {
+                module.releaseStarted = releaseStarted;
+                currentModules.push(module);
+                log:printInfo("Module " + module.name + " release triggerred successfully.");
+            } else {
+                log:printWarn("Module " + module.name + " release did not triggerred successfully.");
+            }
+        }
     }
+    waitForCurrentModuleReleases(currentModules);
 }
 
-function releaseToGithub(map<json> module, http:Client httpClient, http:Request request) {
+function releaseModule(Module module) returns boolean {
+    log:printInfo("------------------------------");
+    log:printInfo("Releasing " + module.name + " Version " + module.'version);
+    http:Request request = createRequest(accessTokenHeaderValue);
     string moduleName = module.name.toString();
     string 'version = module.'version.toString();
-    string branch = module.branch.toString();
-    string notes = module.notes.toString();
+    string apiPath = "/" + moduleName + DISPATCHES;
 
-    log:printInfo("Releasing " + moduleName + " to the Github. Version: " + 'version);
-
-    // TODO: Adding draft and prerelease options. These aren't necessary for now.
-    json payload = {
-        tag_name: "v" + 'version,
-        target_commitish: branch,
-        name: 'version,
-        notes: notes
-    };
-    request.setJsonPayload(payload);
-
-    string modulePath = "/" + ORG_NAME + "/" + moduleName + "/releases";
-    var result = httpClient->post(modulePath, request);
-
-    if (result is error) {
-        log:printError("Error occurred while retrieving the reponse for module: " + moduleName, result);
-        panic result;
-    }
-    http:Response response = <http:Response>result;
-    validateResponse(response, moduleName);
-}
-
-function releaseToBallerina(map<json> module, http:Client httpClient, http:Request request) {
-    string moduleName = module.name.toString();
-    string 'version = module.'version.toString();
-    log:printInfo("Releasing " + moduleName + " to the Ballerina Central Version: " + 'version);
-
-    // TODO: Add branch as a payload parameter, then checkout the needed branch at the destination.
     json payload = {
         event_type: EVENT_TYPE,
         client_payload: {
@@ -79,26 +75,80 @@ function releaseToBallerina(map<json> module, http:Client httpClient, http:Reque
         }
     };
     request.setJsonPayload(payload);
-
-    string modulePath = "/" + ORG_NAME + "/" + moduleName + "/dispatches";
-    var result = httpClient->post(modulePath, request);
-
+    var result = httpClient->post(apiPath, request);
     if (result is error) {
-        log:printError("Error occurred while retrieving the reponse for module: " + moduleName, result);
-        panic result;
+        logAndPanicError("Error occurred while releasing the module: " + moduleName, result);
     }
     http:Response response = <http:Response>result;
-    validateResponse(response, moduleName);
+    return validateResponse(response, moduleName, OPERATION_RELEASE);
 }
 
-function validateResponse(http:Response response, string moduleName) {
-    int statusCode = response.statusCode;
-    if (statusCode != 200 || statusCode != 201 || statusCode != 202 || statusCode != 204) {
-        string errMessage = "Error response received from the module workflow.";
-        string errInfo = "Modlue: " + moduleName + " Status Code: " + statusCode.toString();
-        log:printInfo(errInfo);
-        log:printInfo(response.getJsonPayload().toString());
+function waitForCurrentModuleReleases(Module[] modules) {
+    if (modules.length() == 0) {
+        return;
     }
+    log:printInfo("Waiting for previous level builds");
+    Module[] unreleasedModules = modules.filter(function (Module m) returns boolean {
+        return m.releaseStarted;
+    });
+
+    boolean allModulesReleased = false;
+    int waitCycles = 0;
+    while (!allModulesReleased) {
+        foreach Module module in unreleasedModules {
+            boolean releaseCompleted = checkModuleRelease(module);
+            if (releaseCompleted) {
+                int moduleIndex = <int>unreleasedModules.indexOf(module);
+                Module releasedModule = unreleasedModules.remove(moduleIndex);
+                log:printInfo(releasedModule.name + " " + releasedModule.'version + " is released");
+            }
+        }
+        if (unreleasedModules.length() > 0 && waitCycles < MAX_WAIT_CYCLES) {
+            runtime:sleep(SLEEP_INTERVAL);
+            waitCycles += 1;
+        } else if (unreleasedModules.length() == 0) {
+            allModulesReleased = true;
+        } else if (waitCycles == MAX_WAIT_CYCLES) {
+            break;
+        }
+    }
+    if (unreleasedModules.length() > 0) {
+        log:printWarn("Following modules not released after the max wait time");
+        printModules(unreleasedModules);
+    }
+}
+
+function checkModuleRelease(Module module) returns boolean {
+    log:printInfo("Validating " + module.name + " release");
+    http:Request request = createRequest(accessTokenHeaderValue);
+    string moduleName = module.name.toString();
+    string 'version = module.'version.toString();
+    string expectedReleaseTag = "v" + 'version;
+
+    string modulePath = "/" + moduleName + RELEASES + TAGS + "/v" + 'version;
+    var result = httpClient->get(modulePath, request);
+    if (result is error) {
+        logAndPanicError("Error occurred while checking the release status for module: " + moduleName, result);
+    }
+    http:Response response = <http:Response>result;
+
+    if(!validateResponse(response, moduleName, OPERATION_VALIDATE)) {
+        return false;
+    } else {
+        map<json> payload = <map<json>>response.getJsonPayload();
+        string releaseTag = payload[FIELD_TAG_NAME].toString();
+        return <@untainted>releaseTag == expectedReleaseTag;
+    }
+}
+
+function validateResponse(http:Response response, string moduleName, string operation) returns boolean {
+    int statusCode = response.statusCode;
+    if (statusCode != 200 && statusCode != 201 && statusCode != 202 && statusCode != 204) {
+        log:printInfo("Error received while " + operation + " the module " + moduleName);
+        log:printInfo(response.getJsonPayload().toString());
+        return false;
+    }
+    return true;
 }
 
 function createRequest(string accessTokenHeaderValue) returns http:Request {
@@ -121,4 +171,18 @@ function closeReadChannel(io:ReadableCharacterChannel rc) {
     if (result is error) {
         log:printError("Error occurred while closing character stream", result);
     }
+}
+
+function printModules(Module[] modules) {
+    string[] moduleStrings = modules.map(function (Module m) returns string {
+        return m.name + " " + m.'version;
+    });
+    foreach string moduleString in moduleStrings {
+        log:printInfo(moduleString);
+    }
+}
+
+function logAndPanicError(string message, error e) {
+    log:printError(message, e);
+    panic e;
 }

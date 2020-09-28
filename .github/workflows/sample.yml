@@ -1,6 +1,7 @@
 name: Sample
 
 on:
+    repository_dispatch:
     workflow_dispatch:
 
 jobs:

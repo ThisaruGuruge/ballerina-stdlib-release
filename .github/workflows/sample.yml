@@ -1,0 +1,13 @@
+name: Sample
+
+on:
+    workflow_dispatch:
+
+jobs:
+    publish-stdlib-modules:
+        name: Publish Standard Library Modules
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Echo Event Type
+                run: |
+                    echo {{ github.event.action }}

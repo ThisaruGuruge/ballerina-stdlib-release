@@ -10,4 +10,4 @@ jobs:
         steps:
             -   name: Echo Event Type
                 run: |
-                    echo {{ github.event.action }}
+                    echo ${{ github.event.action }}
